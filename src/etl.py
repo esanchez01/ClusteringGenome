@@ -1,6 +1,6 @@
 """  Data Ingestion
 
-This script retrieves genetic data from the 1000 Genomes
+etl.py retrieves genetic data from the 1000 Genomes
 Project through the International Genome Sample Resource's
 FTP server. 
 
@@ -17,50 +17,15 @@ import io
 import os
 from itertools import islice
 from ftplib import FTP
-
-
-def get_data(vcf, bam, fastq, **kwargs):
-    """
-    Main function
-    
-    Downloads genetic data based on configuration file content.
-    
-    :param vcf: List containing chromosome values for VCF files
-    :param bam: Dictionary containing sample-chromosome pairs
-                for BAM files
-    :param fastq: List containing sample for FASTQ files
-    
-    >>> cfg = json.load(open('data-params.json'))
-    >>> get_data(**cfg) is None
-    True
-    """
-    
-    def run_query(func, data):
-        
-        if type(data) == dict:
-            for key in data.keys():
-                func(key, data[key])
-        else:
-            for arg in data:
-                func(arg)
-    
-    # Download VCF
-    run_query(get_vcf, vcf)
-    
-    # Download BAM
-    run_query(get_bam, dict(bam))
-        
-    # Download FASTQ
-    run_query(get_fastq, fastq)
     
     
-    
-def get_vcf(chr_num):
+def get_vcf(chr_num, outdir):
     """
     Downloads VCF files of a specific chromosome. Chromosomes 
     1-22 are available to download.
     
     :param chr_num: Integer or string representing chromosome to download
+    :param outdir: Directory to write out data
     
     >>> get_vcf(21) is None
     True
@@ -71,20 +36,23 @@ def get_vcf(chr_num):
     fname = ('ALL.chr{}.phase3').format(str(chr_num))
         
     # Downloading file in ftp directory
-    fnames = download_data(path, 'vcf', fname)
+    fnames = download_data(path, 'vcf', outdir, fname)
     
     # Unzip file
-    unzipper(fnames)
+    unzipper(fnames, otudir)
+    
+    return
     
 
     
-def get_bam(sample, chr_num):
+def get_bam(sample, chr_num, outdir):
     """
     Downloads BAM files for a specific individual. Chromosomes
     11 and 20 are available.
     
     :param sample: String identifying individual
     :param chr_num: Integer representing chromosome to download
+    :param outdir: Directory to write out data
     
     >>> get_bam("HG00096", 20) is None
     True
@@ -96,15 +64,18 @@ def get_bam(sample, chr_num):
              .format(sample, str(chr_num)))
     
     # Downloading file
-    download_data(path, 'bam', fname)
+    download_data(path, 'bam', outdir, fname)
+    
+    return
     
     
     
-def get_fastq(sample):
+def get_fastq(sample, outdir):
     """
     Downloads all FASTQ files for a specific individual.
     
     :param sample: String identifying individual
+    :param outdir: Directory to write out data
     
     >>> get_fastq("HG01921") is None
     True
@@ -114,14 +85,16 @@ def get_fastq(sample):
     path = '/vol1/ftp/phase3/data/{}/sequence_read/'.format(sample)
     
     # Downloading all sequences in ftp directory to local directory
-    fnames = download_data(path, 'fastq')
+    fnames = download_data(path, 'fastq', outdir)
     
     # Unzip files
-    unzipper(fnames)
+    unzipper(fnames, outdir)
+    
+    return
     
 
 
-def download_data(path, ftype, fname=None):
+def download_data(path, ftype, outdir, fname=None):
     """
     Downloads data at a specifc path within the International 
     Genome Sample Resource's FTP server
@@ -130,6 +103,7 @@ def download_data(path, ftype, fname=None):
                  files for download
     :param ftype: String representing file type
     :param fname: List containing file names to download
+    :param outdir: Directory to write out data
     """
     
     # Connect to ftp server
@@ -155,12 +129,12 @@ def download_data(path, ftype, fname=None):
         fnames = all_fnames
         
     # Creates data directory if it doesnt exist
-    if not os.path.exists('data'):
-        os.mkdir('data')
+    if not os.path.exists(outdir):
+        os.mkdir(outdir)
     
     # Writes out data to data directory
     for f in fnames:
-        file = open('data/'+f, "wb")
+        file = open(outdir+f, "wb")
         resp = ftp.retrbinary("RETR "+path+f, file.write)
         file.close()
     
@@ -171,18 +145,68 @@ def download_data(path, ftype, fname=None):
 
     
     
-def unzipper(fnames):
+def unzipper(fnames, path):
     """
     Unzips files
     
     :param fnames: List containing files to unzip
+    :param path: Directory of zipped file
     """
     
     # Unzipping files in local directory
     for fname in fnames:
-        with gzip.open('data/'+fname,'rb') as zipped, open('data/'+fname[:-3], 'wb') as unzipped:
+        with gzip.open(path+fname,'rb') as zipped, open(path+fname[:-3], 'wb') as unzipped:
             shutil.copyfileobj(zipped, unzipped)
             
         # Removed old zipped file
-        os.remove('data/'+fname) 
+        os.remove(path+fname) 
+        
+    return
+        
+        
+# ---------------------------------------------------------------------
+# Driver Function
+# ---------------------------------------------------------------------      
+        
+        
+def get_data(vcf, bam, fastq, outdir, **kwargs):
+    """
+    Downloads genetic data based on configuration file content.
+    
+    :param vcf: List containing chromosome values for VCF files
+    :param bam: Dictionary containing sample-chromosome pairs
+                for BAM files
+    :param fastq: List containing sample for FASTQ files
+    :param otudir: Directory to write out files
+    
+    >>> cfg = json.load(open('data-params.json'))
+    >>> get_data(**cfg) is None
+    True
+    """
+    
+    # Checks if inpath passed in. If so, nothing will
+    # be done as only existing test data is needed
+    if len(kwargs) > 0:
+        return
+        
+    else:
+        def run_query(func, data):
+
+            if type(data) == dict:
+                for key in data.keys():
+                    func(key, data[key], outdir)
+            else:
+                for arg in data:
+                    func(arg, outdir)
+
+        # Download VCF
+        run_query(get_vcf, vcf)
+
+        # Download BAM
+        run_query(get_bam, dict(bam))
+
+        # Download FASTQ
+        run_query(get_fastq, fastq)
+    
+    return
               

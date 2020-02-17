@@ -1,5 +1,17 @@
 {
+ "data" :{
     "vcf": [20],
     "bam": {"HG00096": 20},
-    "fastq": ["HG01921"]
+    "fastq": ["HG01921"],
+    "outdir": "data/raw"
+     },
+    
+ "process" : {
+     "inpath": "data/raw",
+     "maf": 0.05,
+     "geno": 0.1,
+     "mind": 0.05,
+     "num_pca": 3,
+     "outdir": "data/out"
+     }
 }
