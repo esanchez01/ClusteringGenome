@@ -1,7 +1,3 @@
-## NOTE: This was created in case analysis of genetic data
-##       is done in pandas. Other software like GATK may be
-##       more efficient and effective.
-
 """  Data Reader
 
 This script takes in VCF, BAM, and FASTQ files
