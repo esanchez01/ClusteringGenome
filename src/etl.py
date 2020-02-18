@@ -130,7 +130,7 @@ def download_data(path, ftype, outdir, fname=None):
         
     # Creates data directory if it doesnt exist
     if not os.path.exists(outdir):
-        os.mkdir(outdir)
+        os.makedirs(outdir)
     
     # Writes out data to data directory
     for f in fnames:

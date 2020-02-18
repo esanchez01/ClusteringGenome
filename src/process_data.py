@@ -21,11 +21,16 @@ def gather_fnames(data_fp):
     :param data_fp: Path where data is housed
     """
     print('gathering file names..')
+    
+    # Creating directory if doesn't exist
+    if not os.path.exists(data_fp.replace('\\', '')):
+        os.makedirs(data_fp.replace('\\', ''))
+    
     # Extracting filepaths for files of interest
     p1_1 = sp.Popen(['ls', data_fp.replace('\\', '')], stdout=sp.PIPE)
     p1_2 = sp.Popen(['grep', '.vcf.gz'], stdin=p1_1.stdout, stdout=sp.PIPE)
     p1_3 = sp.Popen(['grep', '-v', "tbi"], stdin=p1_2.stdout, stdout=sp.PIPE)
-
+        
     f_1 = open("data/temp/input.list", "w")
     p1_4 = sp.Popen(['sed', '-e', 's/^/{}/'.format(data_fp)], stdin=p1_3.stdout, stdout=f_1)
     f_1.close()
@@ -150,7 +155,7 @@ def plot(outdir):
 
     # Creating sample-superpopulation pair dictionary and 
     # mapping to samples in pc data above
-    samples = pd.read_csv('data/raw/sample_pop.csv')
+    samples = pd.read_csv('references/sample_pop.csv')
     samples_dict = samples.set_index('Sample').to_dict()['Population']
     pcs['Population'] = pcs.loc[:,0].apply(lambda x: samples_dict[x])
 
@@ -202,8 +207,12 @@ def plot(outdir):
                                'zaxis_title':"PC3"}
                      )
     
-    print('process finished, plot saved at data/out/genome-plot.html')
+    # Creates directory to input plot
+    if not os.path.exists('data/out'):
+        os.makedirs('data/out')
+        
     ply.plot(fig, filename='data/out/genome-plot.html')
+    print('process finished, plot saved at data/out/genome-plot.html')
     
     
 # ---------------------------------------------------------------------
@@ -213,7 +222,7 @@ def plot(outdir):
 def process_data(inpath, maf, geno, mind, num_pca, outdir):
     
     if not os.path.exists(outdir):
-        os.mkdir(outdir)
+        os.makedirs(outdir)
     
     # Gathers VCF filepaths
     gather_fnames(inpath)

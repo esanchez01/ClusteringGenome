@@ -16,12 +16,10 @@ PROJECT
 ├── config
 │   ├── data-params.json
 │   └── test-params.json
-├── data
-│   ├── out
-│   ├── raw
-│   └── temp
 ├── test
 │   └── testdata
+├── references
+│   └── sample_pop.csv
 ├── notebooks
 │   └── .gitkeep
 ├── requirements.txt

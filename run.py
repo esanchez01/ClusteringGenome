@@ -26,8 +26,7 @@ def main(targets):
     
     # make the clean target
     if 'clean' in targets:
-        shutil.rmtree('data/temp/',ignore_errors=True)
-        os.makedirs('data/temp/')
+        shutil.rmtree('data/',ignore_errors=True)
     
 
     # make the data target
