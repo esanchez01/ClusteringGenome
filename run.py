@@ -3,6 +3,7 @@
 import sys
 import json
 import shutil
+import os
 
 
 sys.path.insert(0, 'src') # add library code to path
@@ -25,9 +26,8 @@ def main(targets):
     
     # make the clean target
     if 'clean' in targets:
-        shutil.rmtree('data/temp/*',ignore_errors=True)
-        shutil.rmtree('data/out/*',ignore_errors=True)
-        shutil.rmtree('data/test/*',ignore_errors=True)
+        shutil.rmtree('data/temp/',ignore_errors=True)
+        os.makedirs('data/temp/')
     
 
     # make the data target

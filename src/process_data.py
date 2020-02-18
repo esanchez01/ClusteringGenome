@@ -7,8 +7,10 @@ plots final results.
 
 import pandas as pd
 import numpy as np
-import plotly.express as px
+import plotly.graph_objs as go
+import plotly.offline as ply
 import subprocess as sp
+import os
 
 
 def gather_fnames(data_fp):
@@ -18,7 +20,7 @@ def gather_fnames(data_fp):
     
     :param data_fp: Path where data is housed
     """
-    
+    print('gathering file names..')
     # Extracting filepaths for files of interest
     p1_1 = sp.Popen(['ls', data_fp.replace('\\', '')], stdout=sp.PIPE)
     p1_2 = sp.Popen(['grep', '.vcf.gz'], stdin=p1_1.stdout, stdout=sp.PIPE)
@@ -27,7 +29,7 @@ def gather_fnames(data_fp):
     f_1 = open("data/temp/input.list", "w")
     p1_4 = sp.Popen(['sed', '-e', 's/^/{}/'.format(data_fp)], stdin=p1_3.stdout, stdout=f_1)
     f_1.close()
-    
+    print('done. \n')
     return
 
 
@@ -38,16 +40,18 @@ def concat_vcfs():
     files together.
     """
     
+    print('concatenating VCFs..')
     # Storing VCF header 
     # TODO: Pipe safely (had some issues here with quoted commands)
-    sp.Popen("zgrep '^\#' \"$(head -1 data/temp/input.list)\" | gzip > data/raw/full_chroms.vcf.gz", 
+    sp.Popen("zgrep '^\#' \"$(head -1 data/temp/input.list)\" | gzip > data/temp/full_chroms.vcf.gz", 
              shell=True, universal_newlines=True,
             stdout=sp.PIPE, stderr=sp.PIPE).communicate()
 
     # Concatenating VCF files
-    sp.Popen("zgrep -v \"^\#\" $(cat data/temp/input.list) | gzip >> data/raw/full_chroms.vcf.gz", 
+    sp.Popen("zgrep -v \"^\#\" $(cat data/temp/input.list) | gzip >> data/temp/full_chroms.vcf.gz", 
              shell=True, universal_newlines=True,
              stdout=sp.PIPE, stderr=sp.PIPE).communicate()
+    print('done. \n')
     
     return
 
@@ -61,14 +65,16 @@ def filter_vcf(maf, geno, mind):
     :param mind: Sample missing call rate threshold
     """
     
+    print('filtering VCF..')
     # Commands
-    cmds = ['plink2', '--vcf', 'data/raw/full_chroms.vcf.gz', '--snps-only', 
+    cmds = ['plink2', '--vcf', 'data/temp/full_chroms.vcf.gz', '--snps-only', 
             '--maf', str(maf), '--geno', str(geno), '--mind', str(mind), '--recode', 
             '--allow-extra-chr', '--make-bed', '--out', 'data/temp/chromosomes']
     
     # Filtering VCF
     sp.Popen(cmds, universal_newlines=True, 
              stdout=sp.PIPE, stderr=sp.PIPE).communicate()
+    print('done. \n')
     
     return 
 
@@ -81,6 +87,7 @@ def check_outliers(eig_path):
     :param eig_path: Path where eigenvector data exists
     """
     
+    print('checking for outliers..')
     # Reading in principal component data
     pcs = (pd.read_csv('{}/chrom_pc.eigenvec'.format(eig_path), sep=' ', header=None)
                    .rename(columns={1:'Sample', 2:'PC1', 3:'PC2', 4:'PC3'}))
@@ -97,8 +104,9 @@ def check_outliers(eig_path):
     if len(outlier_samps) > 0:
         # Writing outliers to text file
         outlier_samps.to_csv('data/temp/outliers.txt', sep= ' ', header=False, index=False)
+        print('outliers found, PCA reinitiated..')
         return True
-    
+    print('no outliers found. \n')
     return False
 
 
@@ -111,20 +119,21 @@ def pca(num_pca, outpath, outliers=False):
     :param outpath: Path to store eigenvector data
     """
     
+    print('running PCA..')
     # Commands
     cmds = ['plink2', '--bfile', 'data/temp/chromosomes', '--pca', 
               str(num_pca), '--remove', 'data/temp/outliers.txt', 
             '--allow-extra-chr', '--out', '{}/chrom_pc'.format(outpath)]
     
-    # Removes '--remove path' argument from command
+    # Removes '--remove [path]' argument from command
     if not outliers: 
         cmds.pop(5)
-        cmds.pop(6)
-        
+        cmds.pop(5)
+
     # Running PCA
     sp.Popen(cmds, universal_newlines=True, 
              stdout=sp.PIPE, stderr=sp.PIPE).communicate()
-    
+    print('done. \n')
     return
 
 
@@ -134,9 +143,9 @@ def plot(outdir):
     
     :param outdir: Path where eigenvector data exists
     """
-    
+    print('plotting eigenvectors..')
     # Reading in principal component data
-    pcs = (pd.read_csv('{}/chrom_pc.eigenvec'.format(eig_path), sep=' ', header=None)
+    pcs = (pd.read_csv('{}/chrom_pc.eigenvec'.format(outdir), sep=' ', header=None)
                    .rename(columns={1:'Sample', 2:'PC1', 3:'PC2', 4:'PC3'}))
 
     # Creating sample-superpopulation pair dictionary and 
@@ -146,16 +155,55 @@ def plot(outdir):
     pcs['Population'] = pcs.loc[:,0].apply(lambda x: samples_dict[x])
 
     # Plotting first three principle components
-    fig = px.scatter_3d(pcs, x='PC1', y='PC2', z='PC3',color='Population')
-    fig.update_traces(marker=dict(size=2.5))
-    fig.update_layout(width=800, 
-                      margin=dict(r=20, l=50, b=70, t=30), 
-                      legend={'x':.75, 'y':.85, 'itemsizing':'constant'},
-                      title={'text': "Clustering Chromosomes", 
-                      'y':0.9,'x':0.53},
-                      font=dict(size=15))
+    fig = go.Figure()
+
+    european = pcs[pcs['Population'] == 'European']
+    east_asian = pcs[pcs['Population'] == 'East Asian']
+    mixed_american = pcs[pcs['Population'] == 'Ad Mixed American']
+    south_asia = pcs[pcs['Population'] == 'South Asian']
+    african = pcs[pcs['Population'] == 'African']
+
+    fig.add_trace(go.Scatter3d(
+        x=european['PC1'], y=european['PC2'], z=european['PC3'],
+        legendgroup="group", name="European", mode="markers",
+        marker={'size':2.5}
+    ))
+
+    fig.add_trace(go.Scatter3d(
+        x=east_asian['PC1'], y=east_asian['PC2'], z=east_asian['PC3'],
+        legendgroup="group", name="East Asian", mode="markers",
+        marker={'size':2.5}
+    ))
+
+    fig.add_trace(go.Scatter3d(
+        x=mixed_american['PC1'], y=mixed_american['PC2'], z=mixed_american['PC3'],
+        legendgroup="group", name="Ad Mixed American", mode="markers",
+        marker={'size':2.5}
+    ))
+
+    fig.add_trace(go.Scatter3d(
+        x=south_asia['PC1'], y=south_asia['PC2'], z=south_asia['PC3'],
+        legendgroup="group", name="South Asian", mode="markers",
+        marker={'size':2.5}
+    ))
+
+    fig.add_trace(go.Scatter3d(
+        x=african['PC1'], y=african['PC2'], z=african['PC3'],
+        legendgroup="group", name="African", mode="markers",
+        marker={'size':2.5}
+    ))
+
+    fig.update_layout(width = 1000, margin = {'r':50, 'l':80, 'b':10, 't':50}, 
+                      legend = {'x':.83, 'y':.85, 'itemsizing':'constant'},
+                      title = {'text': "Chromosome Clusters", 'y':0.9,'x':0.53},                   
+                      titlefont = {"size": 24},
+                      font = {'size':12}, showlegend=True,
+                      scene = {'xaxis_title': "PC1", 'yaxis_title':"PC2", 
+                               'zaxis_title':"PC3"}
+                     )
     
-    fig.show()
+    print('process finished, plot saved at data/out/genome-plot.html')
+    ply.plot(fig, filename='data/out/genome-plot.html')
     
     
 # ---------------------------------------------------------------------
@@ -187,4 +235,4 @@ def process_data(inpath, maf, geno, mind, num_pca, outdir):
     plot(outdir)
     
     
-    #return
+    return
