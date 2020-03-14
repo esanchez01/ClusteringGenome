@@ -17,6 +17,7 @@ import io
 import os
 from itertools import islice
 from ftplib import FTP
+
     
     
 def get_vcf(chr_num, outdir):

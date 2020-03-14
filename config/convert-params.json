@@ -1,0 +1,8 @@
+{
+ "data" :{
+     "fastq_bam": ["../../../datasets/dsc180a-wi20-public/Genome/fastq/testfile/SP1.fq"],
+     "fastq_vcf": [],
+     "bam_vcf": [],
+     "outdir": "data/out"
+     }
+}

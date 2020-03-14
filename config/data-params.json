@@ -1,8 +1,8 @@
 {
  "data" :{
-    "vcf": [20],
-    "bam": {"HG00096": 20},
-    "fastq": ["HG01921"],
+    "vcf": [],
+    "bam": {},
+    "fastq": ["HG00096"],
     "outdir": "data/raw"
      },
     
