@@ -12,7 +12,7 @@ In order to use the different components of this project, please run `python run
 * `data`: Retrieves data files according to data-params.json 'data' key
 * `data-test`: Retrieves test file for test run
 * `process`: Processes and produces output files
-* `test-project`: Tests project – shorcut to running `python run.py data-test process`
+* `test-project`: Tests project – shortcut to running `python run.py data-test process`
 
 ## Description of Contents
 
