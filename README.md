@@ -5,7 +5,14 @@ This project will replicate the findings of John Novembre et al. as described in
 
 ## Usage Instructions
 
-* Description of targets and using `run.py`
+In order to use the different components of this project, please run the 'run.py' script along with the following targets of your choice:
+
+* `clean`: Cleans directory after project run.
+* `convert`: Converts data files according to convert-params.json
+* `data`: Retrieves data files according to data-params.json 'data' key
+* `data-test`: Retrieves test file for test run
+* `process`: Processes and produces output files
+* `test-project`: Tests project. Shorcut to running `python run.py data-test process`
 
 ## Description of Contents
 
@@ -14,44 +21,61 @@ The project consists of these portions:
 PROJECT
 ├── README.md
 ├── config
+│   ├── convert-params.json
 │   ├── data-params.json
+│   ├── env.json
 │   └── test-params.json
 ├── test
 │   └── testdata
 ├── references
 │   └── sample_pop.csv
 ├── notebooks
-│   └── .gitkeep
+│   ├── notebook-resources
+│   └── ProjectReport.ipynb
 ├── requirements.txt
 ├── run.py
 └── src
+    ├── conversion.py
+    ├── conversion.sh
     ├── etl.py
     ├── process_data.py
-    ├── read_data.py
+    ├── process_data.sh
+    └── read_data.py
 ```
 
 ### `src`
 
-* `etl.py`: Library code that executes tasks useful for getting data.
+* `conversion.py`: Library code to convert between FASTQ, BAM, and FASTQ files.
+* `conversion.sh`: Shell script to store BWA, GATK, and SAMTools commands used
+                   in 'conversion.py'.
+* `etl.py`: Library code that executes tasks useful for getting data from 
+            1000 Genomes FTP.
 * `process_data.py`: Library code that executes tasks for processing data
-                     and generating chromosome cluster plot
-* `read_data.py`: Optional library code useful for importing BAM, FASTQ,
-                  and VCF files into a Pandas dataframe
+                     and generating chromosome cluster plot.
+* `process_data.sh`: Shell script to store PLINK2 and VCF merging commands used
+                     in 'process_data.py'.
+* `read_data.py`: Optional library code to transform BAM, FASTQ,
+                  and VCF files into a Pandas dataframe.
 
 ### `config`
 
 * `data-params.json`: Common parameters for getting data, serving as
-  inputs to library code.
-  
-* `test-params.json`: parameters for running small process on small
-  test data.
+                      inputs to library code.
+* `test-params.json`: Parameters for running small process on small
+                      test data.
+* `convert-parama.json`: Parameters for converting converting between FASTQ,
+                         BAM, and VCF files.
+* `env.json`: Configuration file containing DockerHub path and ouput filepaths.
 
 ### `references`
 
-* Data Dictionaries, references to external sources
+* `sample_pop.csv`: File containing sample IDs and their corresponding population.
+                    Used for population mapping in output plot.
 
 ### `notebooks`
 
-* Jupyter notebooks for *analyses*
-  - notebooks are not for data processing; they should import code
-    from `src`.
+* `ProjectReport.ipynb`: Report containing the description, workflow, and findings of this project.
+
+### `test`
+
+* `test`: Files for testing project.
