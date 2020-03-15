@@ -5,9 +5,9 @@ This project will replicate the findings of John Novembre et al. as described in
 
 ## Usage Instructions
 
-In order to use the different components of this project, please run the 'run.py' script along with the following targets of your choice:
+In order to use the different components of this project, please run `python run.py` along with a target of your choice:
 
-* `clean`: Cleans directory after project run.
+* `clean`: Cleans directory after project run
 * `convert`: Converts data files according to convert-params.json
 * `data`: Retrieves data files according to data-params.json 'data' key
 * `data-test`: Retrieves test file for test run
