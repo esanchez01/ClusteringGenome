@@ -1,7 +1,9 @@
 
 # Clustering the Human Genome
 
-This project will replicate the findings of John Novembre et al. as described in the article "Genes mirror geography within Europe". In this study, genetic variation of 3,000 European individuals, collected by the Population Reference Sample project, are investigated. Interestingly, despite relatively low levels of genetic differences amongst the sample, a strong correlation between genetic variation and geographic distances was found. In fact, clustering and plotting each of these individuals closely resembles the map of Europe as the name of the article suggests. However, given that worldwide genetic variation data is available thanks to the 1000 Genome Project, this project will aim to extend these boundaries to not only Europe but the world.
+This project will replicate the findings of John Novembre et al. as described in the article "Genes mirror geography within Europe". In this study, genetic variation of 3,000 European individuals, collected by the Population Reference Sample project, are investigated. Interestingly, despite relatively low levels of genetic differences amongst the sample, a strong correlation between genetic variation and geographic distances was found. In fact, clustering and plotting each of these individuals closely resembles the map of Europe as the name of the article suggests. However, given that worldwide genetic variation data is available thanks to the 1000 Genomes Project, this project will aim to extend these boundaries to not only Europe but the world.
+
+Want to learn more? Check out `ProjectReport.ipynb` in the **notebooks** folder!
 
 ## Usage Instructions
 
